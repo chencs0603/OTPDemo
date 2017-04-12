@@ -64,7 +64,7 @@ public class OTPApi {
 			logger.debug("returnDigits is invalid--returnDigits:" + returnDigits);
 			throw new IllegalArgumentException("returnDigits is invalid--returnDigits:" + returnDigits);
 		}
-		logger.debug("hmac:" + hmac + ", hmacLen:" + hmac.length + ", returnDigits:" + returnDigits);
+		logger.debug("hmacLen:" + hmac.length + ", returnDigits:" + returnDigits);
 		
 		//取hmac数组的最后一个元素的低四位作为索引
 		int offset = hmac[hmac.length - 0x01]&0x0F;
