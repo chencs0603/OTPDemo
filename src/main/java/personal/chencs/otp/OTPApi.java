@@ -1,6 +1,8 @@
 package personal.chencs.otp;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 /**
  * OTP相关接口
@@ -8,6 +10,8 @@ import org.apache.commons.lang3.ArrayUtils;
  *
  */
 public class OTPApi {
+	private static Logger logger = LogManager.getLogger(OTPApi.class);
+	
 	/**
 	 * 算法类型（包括HmacSHA1、HmacSHA256、HmacSHA512）
 	 * @author chencs
@@ -53,11 +57,14 @@ public class OTPApi {
 	public static String truncateHmac(byte[] hmac, int returnDigits){
 		//检测输入参数的合法性
 		if(ArrayUtils.isEmpty(hmac) || hmac.length < 0x04){
+			logger.debug("hmac is invalid--hmac:" + hmac + ", hmacLen:" + hmac.length);
 			throw new IllegalArgumentException("hmac is invalid--hmac:" + hmac + ", hmacLen:" + hmac.length);
 		}
 		if(0x04 >= returnDigits || 0x08 < returnDigits){
-			throw new IllegalArgumentException("returnDigits is invalid--returnDigits" + returnDigits);
+			logger.debug("returnDigits is invalid--returnDigits:" + returnDigits);
+			throw new IllegalArgumentException("returnDigits is invalid--returnDigits:" + returnDigits);
 		}
+		logger.debug("hmac:" + hmac + ", hmacLen:" + hmac.length + ", returnDigits:" + returnDigits);
 		
 		//取hmac数组的最后一个元素的低四位作为索引
 		int offset = hmac[hmac.length - 0x01]&0x0F;
@@ -71,9 +78,11 @@ public class OTPApi {
 		final int[] digitsPower = {1,10,100,1000,10000,100000,1000000,10000000,100000000};
 		int otp = binary % digitsPower[returnDigits];
 		String result = Integer.toString(otp);
+		//位数不够在前面0
 		while (result.length() < returnDigits) {
 			result = "0" + result;
 		}
+		logger.debug("result:" + result);
 		return result;
 	}
 
