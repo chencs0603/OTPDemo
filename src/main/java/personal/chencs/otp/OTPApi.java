@@ -57,11 +57,11 @@ public class OTPApi {
 	public static String truncateHmac(byte[] hmac, int returnDigits){
 		//检测输入参数的合法性
 		if(ArrayUtils.isEmpty(hmac) || hmac.length < 0x04){
-			logger.debug("hmac is invalid--hmac:" + hmac + ", hmacLen:" + hmac.length);
+			logger.warn("hmac is invalid--hmac:" + hmac + ", hmacLen:" + hmac.length);
 			throw new IllegalArgumentException("hmac is invalid--hmac:" + hmac + ", hmacLen:" + hmac.length);
 		}
 		if(0x04 >= returnDigits || 0x08 < returnDigits){
-			logger.debug("returnDigits is invalid--returnDigits:" + returnDigits);
+			logger.warn("returnDigits is invalid--returnDigits:" + returnDigits);
 			throw new IllegalArgumentException("returnDigits is invalid--returnDigits:" + returnDigits);
 		}
 		logger.debug("hmacLen:" + hmac.length + ", returnDigits:" + returnDigits);
