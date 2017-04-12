@@ -1,12 +1,13 @@
 package personal.chencs.otp;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 /**
  * OTP相关接口
  * @author chencs
  *
  */
 public class OTPApi {
-	
 	/**
 	 * 算法类型（包括HmacSHA1、HmacSHA256、HmacSHA512）
 	 * @author chencs
@@ -50,8 +51,30 @@ public class OTPApi {
 	 * @return 动态口令
 	 */
 	public static String truncateHmac(byte[] hmac, int returnDigits){
+		//检测输入参数的合法性
+		if(ArrayUtils.isEmpty(hmac) || hmac.length < 0x04){
+			throw new IllegalArgumentException("hmac is invalid--hmac:" + hmac + ", hmacLen:" + hmac.length);
+		}
+		if(0x04 >= returnDigits || 0x08 < returnDigits){
+			throw new IllegalArgumentException("returnDigits is invalid--returnDigits" + returnDigits);
+		}
 		
-		return null;
+		//取hmac数组的最后一个元素的低四位作为索引
+		int offset = hmac[hmac.length - 0x01]&0x0F;
+		//从offset开始取四字节，并去掉开头的符号位
+		int binary = ((hmac[offset] & 0x7f) << 24) |
+				((hmac[offset + 1] & 0xff) << 16) |
+				((hmac[offset + 2] & 0xff) << 8) |
+				(hmac[offset + 3] & 0xff);
+		
+		                        // 0  1  2    3     4     5       6      7        8
+		final int[] digitsPower = {1,10,100,1000,10000,100000,1000000,10000000,100000000};
+		int otp = binary % digitsPower[returnDigits];
+		String result = Integer.toString(otp);
+		while (result.length() < returnDigits) {
+			result = "0" + result;
+		}
+		return result;
 	}
 
 }
