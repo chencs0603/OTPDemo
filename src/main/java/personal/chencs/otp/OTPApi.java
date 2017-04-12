@@ -1,6 +1,8 @@
 package personal.chencs.otp;
 
+import org.apache.commons.codec.digest.HmacUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -30,8 +32,44 @@ public class OTPApi {
 	 * @return 动态口令
 	 */
 	public static String generateTOTP(byte[] key, byte[] time, int returnDigits, CryptoType cryptoType){
+		//检测输入参数的合法性
+		if(ArrayUtils.isEmpty(key)){
+			logger.warn("key is invalid");
+			throw new IllegalArgumentException("key is invalid");
+		}
+		if(ArrayUtils.isEmpty(time)){
+			logger.warn("time is invalid");
+			throw new IllegalArgumentException("time is invalid");
+		}
+		if(0x04 >= returnDigits || 0x08 < returnDigits){
+			logger.warn("returnDigits is invalid--returnDigits:" + returnDigits);
+			throw new IllegalArgumentException("returnDigits is invalid--returnDigits:" + returnDigits);
+		}
+		if(null == cryptoType){
+			logger.warn("cryptoType is invalid");
+			throw new IllegalArgumentException("cryptoType is invalid");
+		}
+		logger.debug("keyLen:" + key.length + ", timeLen:" + time.length + ", returnDigits:" + returnDigits + ", cryptoType:" + cryptoType);
 		
-		return null;
+		byte[] hmac = null;
+		switch (cryptoType) {
+		case HmacSHA1:
+			hmac = HmacUtils.hmacSha1(key, time);
+			break;
+		case HmacSHA256:
+			hmac = HmacUtils.hmacSha256(key, time);
+			break;
+		case HmacSHA512:
+			hmac = HmacUtils.hmacSha512(key, time);
+				break;
+		default:
+			break;
+		}
+		
+		String otp = truncateHmac(hmac, returnDigits);
+		
+		logger.debug("otp:" + otp);
+		return otp;
 	}
 	
 	/**
