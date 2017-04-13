@@ -2,7 +2,7 @@ package personal.chencs.otp;
 
 import org.apache.commons.codec.digest.HmacUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -73,6 +73,66 @@ public class OTPApi {
 	}
 	
 	/**
+	 * 时间型动态口令认证
+	 * @param password 需要认证的动态口令
+	 * @param key
+	 * @param cycle
+	 * @param timeOffset
+	 * @param bigTimeWindow
+	 * @return
+	 */
+	public static Integer authTOTP(String password, byte[] key, int cycle, int timeOffset, int bigTimeWindow){
+		//检测输入参数的合法性
+		if (StringUtils.isBlank(password)) {
+			logger.warn("password is invalid");
+			throw new IllegalArgumentException("password is invalid");
+		}
+		if(ArrayUtils.isEmpty(key)){
+			logger.warn("key is invalid");
+			throw new IllegalArgumentException("key is invalid");
+		}
+		if(30 != cycle && 60 != cycle){
+			logger.warn("cycle is invalid");
+			throw new IllegalArgumentException("cycle is invalid--cycle:" + cycle);
+		}
+		if(0 >= bigTimeWindow){
+			logger.warn("bigTimeWindow is invalid");
+			throw new IllegalArgumentException("bigTimeWindow is invalid--bigTimeWindow:" + bigTimeWindow);
+		}
+		logger.debug("password:" + password + ", keyLen:" + key.length + ", cycle:" + cycle + ", timeOffset:" + timeOffset + ", bigTimeWindow:" + bigTimeWindow);
+		
+		String otp;
+		byte[] time;
+		int returnDigits = password.length();
+		CryptoType cryptoType = CryptoType.HmacSHA1;
+		for (int i = 0; i < bigTimeWindow; i++) {
+			if(0 == i){
+				time = generateTime(cycle, timeOffset);
+				otp = generateTOTP(key, time, returnDigits, cryptoType);
+				logger.debug("i:" + i + ", otp:" + otp);
+				if(password.equals(otp)){
+					return i;
+				}
+			}else{
+				time = generateTime(cycle, timeOffset + i);
+				otp = generateTOTP(key, time, returnDigits, cryptoType);
+				logger.debug("i:" + i + ", otp:" + otp);
+				if(password.equals(otp)){
+					return i;
+				}
+				time = generateTime(cycle, timeOffset - i);
+				otp = generateTOTP(key, time, returnDigits, cryptoType);
+				logger.debug("i:" + i + ", otp:" + otp);
+				if(password.equals(otp)){
+					return -i;
+				}
+			}
+		}
+		
+		return null;
+	}
+	
+	/**
 	 * 生成挑战型动态口令
 	 * @param key 令牌种子密钥
 	 * @param time 时间因子
@@ -122,6 +182,25 @@ public class OTPApi {
 		}
 		logger.debug("result:" + result);
 		return result;
+	}
+	
+	/**
+	 * 生成时间因子
+	 * @param cycle 周期(单位是秒)
+	 * @param timeOffset 时间偏移
+	 * @return 时间因子
+	 */
+	public static byte[] generateTime(int cycle, int timeOffset){
+		//检测输入参数的合法性
+		if(30 != cycle && 60 != cycle){
+			logger.warn("cycle is invalid");
+			throw new IllegalArgumentException("cycle is invalid--cycle:" + cycle);
+		}
+		
+		long timestamp = System.currentTimeMillis();
+		long time = timestamp/(cycle*1000) + timeOffset;
+		
+		return ByteUtils.longToBytes(time);
 	}
 
 }

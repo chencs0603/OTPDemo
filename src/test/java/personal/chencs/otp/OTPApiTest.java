@@ -27,16 +27,34 @@ public class OTPApiTest {
 	
 	@Test
 	public void testGenerateTOTP() throws DecoderException {
-		byte[] key = Hex.decodeHex("03AECB998837F80FF158E57452B91ECE6EE3ABDB".toCharArray());
-		byte[] time = Hex.decodeHex("0000000001771A28".toCharArray());
-		int returnDigits = 0x06;
+		byte[] key = Hex.decodeHex("3132333435363738393031323334353637383930".toCharArray());
+		byte[] time = Hex.decodeHex("00000000023523EC".toCharArray());
+		int returnDigits = 0x08;
 		CryptoType cryptoType = CryptoType.HmacSHA1;
 		logger.info("key:" + Hex.encodeHexString(key).toUpperCase() + ", time:" + Hex.encodeHexString(time).toUpperCase() + ", returnDigits:" + returnDigits + ", cryptoType:" + cryptoType);
 		
 		String otp = OTPApi.generateTOTP(key, time, returnDigits, cryptoType);
 		
 		logger.info("otp:" + otp);
-		Assert.assertTrue("027388".equals(otp));
+		Assert.assertTrue("07081804".equals(otp));
+	}
+	
+	@Test
+	public void testAuthTOTP() throws DecoderException{
+		byte[] key = Hex.decodeHex("3132333435363738393031323334353637383930".toCharArray());
+		CryptoType cryptoType = CryptoType.HmacSHA1;
+		int cycle = 60;
+		int timeOffset = 0;
+		int returnDigits = 0x06;
+		int bigTimeWindow = 0x08;
+		byte[] time = OTPApi.generateTime(cycle, timeOffset);
+		String password = OTPApi.generateTOTP(key, time, returnDigits, cryptoType);
+		
+		logger.info("time:" + Hex.encodeHexString(time).toUpperCase() + ", password:" + password);
+		Integer authResult = OTPApi.authTOTP(password, key, cycle, timeOffset, bigTimeWindow);
+		
+		logger.info("authResult:" + authResult);
+		Assert.assertTrue(0x01 >= Math.abs(authResult));
 	}
 
 }
