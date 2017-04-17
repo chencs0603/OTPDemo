@@ -6,6 +6,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
+import personal.chencs.utils.ByteUtils;
+
 /**
  * OTP相关接口
  * @author chencs
