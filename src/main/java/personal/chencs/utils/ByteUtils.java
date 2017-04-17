@@ -1,7 +1,7 @@
 package personal.chencs.utils;
 
 /**
- * 
+ * Byte数组相关的工具类
  * @author chencs
  *
  */
