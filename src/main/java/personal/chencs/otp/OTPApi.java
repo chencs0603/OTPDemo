@@ -6,7 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
-import personal.chencs.utils.ByteUtils;
+import personal.chencs.utils.MyByteUtils;
 
 /**
  * OTP相关接口
@@ -202,7 +202,7 @@ public class OTPApi {
 		long timestamp = System.currentTimeMillis();
 		long time = timestamp/(cycle*1000) + timeOffset;
 		
-		return ByteUtils.longToBytes(time);
+		return MyByteUtils.longToBytes(time, true);
 	}
 
 }
