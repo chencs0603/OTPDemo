@@ -23,11 +23,51 @@ public class MyByteUtils {
 		}else{
 			//小端模式
 			for (int i = 0; i < 0x08; i++) {
-	            int offset = (1 + i) * 8;
+	            int offset = i * 8;
 	            bytes[i] = (byte) (num >>> offset);
 			}
 		}
         
         return bytes;
     }
+	
+	/**
+	 * 8字节byte数组转成long整数（支持大小端两种模式）
+	 * @param bytes 
+	 * @param bigEndian true：大端模式，false：小端模式
+	 * @return
+	 */
+	public static long bytesToLong(byte[] bytes, boolean bigEndian) {
+		//验证参数的合法性
+		if (null == bytes) {
+			throw new IllegalArgumentException("input is null");
+		}
+		if (bytes.length > 0x08)
+        {
+            throw new IllegalArgumentException("invalid input length");
+        }
+		
+		long num = 0;
+        if (bytes.length == 0)
+        {
+            return num;
+        }
+        
+		if (bigEndian) {
+			//大端模式
+	        for (int i = 0; i < bytes.length; i++)
+	        {
+	            num |= (long)(bytes[i] & 0xff) << (8 * (bytes.length - 1 - i));
+	        }
+	        
+		}else{
+			////小端模式
+			for (int i = 0; i < bytes.length; i++)
+	        {
+	            num |= (long)(bytes[i] & 0xff) << (8 * i);
+	        }
+		}
+		
+		return num;
+	}
 }
