@@ -53,6 +53,36 @@ public class OTPApiTest {
 	}
 	
 	@Test
+	public void testGenerateOCRA() throws DecoderException {
+		byte[] key = Hex.decodeHex("3132333435363738393031323334353637383930".toCharArray());
+		
+		String[] challengeCode = {"00000000", "11111111", "12345678", "87654321"};
+		String ocraSuite = "OCRA-1:HOTP-SHA1-6:QN08";
+		String otp;
+		System.out.println("OCRASuite:" + ocraSuite);
+		System.out.println("+-----------------+-----------+");
+		System.out.println("|  challengeCode  |    OCRA   |");
+		System.out.println("+-----------------+-----------+");
+		for (int i = 0; i < challengeCode.length; i++) {
+			otp = OTPApi.generateOCRA(ocraSuite, key, challengeCode[i], 0x00);
+			System.out.println("|     " + challengeCode[i] + "    |  " + otp + "   |");
+			System.out.println("+-----------------+-----------+");
+		}
+		
+		ocraSuite = "OCRA-1:HOTP-SHA512-8:QN08-T1M";
+		System.out.println("OCRASuite:" + ocraSuite);
+		System.out.println("+-----------------+-----------+");
+		System.out.println("|  challengeCode  |    OCRA   |");
+		System.out.println("+-----------------+-----------+");
+		for (int i = 0; i < challengeCode.length; i++) {
+			otp = OTPApi.generateOCRA(ocraSuite, key, challengeCode[i], 0x00);
+			System.out.println("|     " + challengeCode[i] + "    |  " + otp + " |");
+			System.out.println("+-----------------+-----------+");
+		}
+	}
+	
+	
+	@Test
 	public void testAuthTOTP() throws DecoderException{
 		byte[] key = Hex.decodeHex("3132333435363738393031323334353637383930".toCharArray());
 		CryptoType cryptoType = CryptoType.HmacSHA1;
