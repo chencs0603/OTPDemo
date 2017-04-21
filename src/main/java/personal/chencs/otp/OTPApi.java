@@ -189,7 +189,7 @@ public class OTPApi {
 	/**
 	 * 生成时间因子
 	 * @param cycle 周期(单位是秒)
-	 * @param timeOffset 时间偏移
+	 * @param timeOffset 时间偏移(单位是周期)
 	 * @return 时间因子
 	 */
 	public static byte[] generateTime(int cycle, int timeOffset){
