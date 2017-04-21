@@ -5,6 +5,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.bouncycastle.util.encoders.Hex;
 
 import personal.chencs.utils.MyByteUtils;
 
@@ -51,7 +52,9 @@ public class OTPApi {
 			logger.warn("cryptoType is invalid");
 			throw new IllegalArgumentException("cryptoType is invalid");
 		}
-		logger.debug("keyLen:" + key.length + ", timeLen:" + time.length + ", returnDigits:" + returnDigits + ", cryptoType:" + cryptoType);
+		logger.debug("key:" + Hex.toHexString(key).toUpperCase());
+		logger.debug("time:" + Hex.toHexString(time).toUpperCase());
+		logger.debug("returnDigits:" + returnDigits + ", cryptoType:" + cryptoType);
 		
 		byte[] hmac = null;
 		switch (cryptoType) {
@@ -101,7 +104,8 @@ public class OTPApi {
 			logger.warn("bigTimeWindow is invalid");
 			throw new IllegalArgumentException("bigTimeWindow is invalid--bigTimeWindow:" + bigTimeWindow);
 		}
-		logger.debug("password:" + password + ", keyLen:" + key.length + ", cycle:" + cycle + ", timeOffset:" + timeOffset + ", bigTimeWindow:" + bigTimeWindow);
+		logger.debug("key:" + Hex.toHexString(key).toUpperCase());
+		logger.debug("password:" + password + ", cycle:" + cycle + ", timeOffset:" + timeOffset  + ", bigTimeWindow:" + bigTimeWindow);
 		
 		String otp;
 		byte[] time;
@@ -157,6 +161,11 @@ public class OTPApi {
 			throw new IllegalArgumentException("challengeCode is invalid");
 		}
 		
+		logger.debug("ocraSuite:" + ocraSuite);
+		logger.debug("key:" + Hex.toHexString(key).toUpperCase());
+		logger.debug("challengeCode:" + challengeCode);
+		logger.debug("timeOffset:" + timeOffset);
+		
 		//OCRASuite=<Algorithm>:<CryptoFunction>:<DataInput>
 		String cryptoFunction = ocraSuite.split(":")[1];
 		String dataInput = ocraSuite.split(":")[2];
@@ -175,6 +184,7 @@ public class OTPApi {
 		if(0x04 > returnDigits || 0x08 < returnDigits){
 			returnDigits = 0x06;
 		}
+		logger.debug("cryptoType:" + cryptoType + ", returnDigits:" + returnDigits);
 		
 		//暂支持Q、T两种因子，其中挑战码是必备因子
 		if(!(dataInput.startsWith("Q") ||(dataInput.contains("-") && dataInput.split("-")[0].indexOf("Q") > 0))){
@@ -190,6 +200,7 @@ public class OTPApi {
 			throw new IllegalArgumentException("challengeCodeLen or ocraSuite is invalid");
 		}
 		System.arraycopy(challengeCodeBytes, 0x00, question, 0x00, challengeCodeBytes.length);
+		logger.debug("question:" + Hex.toHexString(question).toUpperCase());
 		
 		//解析时间周期(单位是秒)
 		int cycle = 0;
@@ -215,6 +226,7 @@ public class OTPApi {
 			}
 			time = generateTime(cycle, timeOffset);
 			timeLen = time.length;
+			logger.debug("time:" + Hex.toHexString(time).toUpperCase());
 		} else{
 			//没有时间因子
 			timeLen = 0x00;
@@ -230,6 +242,8 @@ public class OTPApi {
 		if (0x00 != timeLen) {
 			System.arraycopy(time, 0x00, msg, ocraSuiteBytesLen + 0x01 + question.length, timeLen);
 		}
+		logger.debug("msg:" + Hex.toHexString(msg).toUpperCase());
+		
 		byte[] hmac = null;
 		switch (cryptoType) {
 		case HmacSHA1:
@@ -267,7 +281,8 @@ public class OTPApi {
 			logger.warn("returnDigits is invalid--returnDigits:" + returnDigits);
 			throw new IllegalArgumentException("returnDigits is invalid--returnDigits:" + returnDigits);
 		}
-		logger.debug("hmacLen:" + hmac.length + ", returnDigits:" + returnDigits);
+		logger.debug("hmac:" + Hex.toHexString(hmac).toUpperCase());
+		logger.debug("returnDigits:" + returnDigits);
 		
 		//取hmac数组的最后一个元素的低四位作为索引
 		int offset = hmac[hmac.length - 0x01]&0x0F;
