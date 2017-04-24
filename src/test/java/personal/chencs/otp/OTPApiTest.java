@@ -2,6 +2,7 @@ package personal.chencs.otp;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
@@ -81,9 +82,8 @@ public class OTPApiTest {
 		}
 	}
 	
-	
 	@Test
-	public void testAuthTOTP() throws DecoderException{
+	public void testAuthTOTP() throws DecoderException {
 		byte[] key = Hex.decodeHex("3132333435363738393031323334353637383930".toCharArray());
 		CryptoType cryptoType = CryptoType.HmacSHA1;
 		int cycle = 60;
@@ -100,4 +100,19 @@ public class OTPApiTest {
 		Assert.assertTrue(0x01 >= Math.abs(authResult));
 	}
 
+	@Test
+	public void testAuthOCRA() throws DecoderException{
+		byte[] key = Hex.decodeHex("3132333435363738393031323334353637383930".toCharArray());
+		String ocraSuite = "OCRA-1:HOTP-SHA1-6:QN08-T1M";
+		String challengeCode = RandomStringUtils.random(0x08, "1234567890");
+		int timeOffset = 0;
+		int bigTimeWindow = 0x08;
+		String password = OTPApi.generateOCRA(ocraSuite, key, challengeCode, timeOffset);
+		
+		logger.info("challengeCode:" + challengeCode + ", password:" + password);
+		Integer authResult = OTPApi.authOCRA(password, ocraSuite, key, challengeCode, timeOffset, bigTimeWindow);
+		
+		logger.info("authResult:" + authResult);
+		Assert.assertTrue(0x01 >= Math.abs(authResult));
+	}
 }

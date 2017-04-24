@@ -80,11 +80,11 @@ public class OTPApi {
 	/**
 	 * 时间型动态口令认证
 	 * @param password 需要认证的动态口令
-	 * @param key
-	 * @param cycle
-	 * @param timeOffset
-	 * @param bigTimeWindow
-	 * @return
+	 * @param key 令牌种子密钥
+	 * @param cycle 周期(单位是秒)
+	 * @param timeOffset 时间偏移(单位是周期)
+	 * @param bigTimeWindow 大时间窗口（单位是周期）
+	 * @return 认证结果（新的时间偏移，认证失败返回null）
 	 */
 	public static Integer authTOTP(String password, byte[] key, int cycle, int timeOffset, int bigTimeWindow){
 		//检测输入参数的合法性
@@ -117,6 +117,7 @@ public class OTPApi {
 				otp = generateTOTP(key, time, returnDigits, cryptoType);
 				logger.debug("i:" + i + ", otp:" + otp);
 				if(password.equals(otp)){
+					logger.debug("Auth TOTP Success, the result is 0");
 					return i;
 				}
 			}else{
@@ -124,17 +125,20 @@ public class OTPApi {
 				otp = generateTOTP(key, time, returnDigits, cryptoType);
 				logger.debug("i:" + i + ", otp:" + otp);
 				if(password.equals(otp)){
+					logger.debug("Auth TOTP Success, the result is " + i);
 					return i;
 				}
 				time = generateTime(cycle, timeOffset - i);
 				otp = generateTOTP(key, time, returnDigits, cryptoType);
-				logger.debug("i:" + i + ", otp:" + otp);
+				logger.debug("i:" + (-i) + ", otp:" + otp);
 				if(password.equals(otp)){
+					logger.debug("Auth TOTP Success, the result is " + (-i));
 					return -i;
 				}
 			}
 		}
 		
+		logger.debug("Auth TOTP Fail");
 		return null;
 	}
 	
@@ -263,6 +267,71 @@ public class OTPApi {
 		
 		logger.debug("otp:" + otp);
 		return otp;
+	}
+	
+	/**
+	 * 挑战型动态口令认证
+	 * @param password 需要认证的动态口令
+	 * @param ocraSuite 包含算法、动态口令长度、挑战码长度等信息
+	 * @param key 令牌种子密钥
+	 * @param challengeCode 挑战码
+	 * @param timeOffset 时间偏移(单位是周期)
+	 * @param bigTimeWindow 大时间窗口（单位是周期）
+	 * @return 认证结果（新的时间偏移，认证失败返回null）
+	 */
+	public static Integer authOCRA(String password, String ocraSuite, byte[] key, String challengeCode, int timeOffset, int bigTimeWindow){
+		//检测输入参数的合法性
+		if (StringUtils.isBlank(password)) {
+			logger.warn("password is invalid");
+			throw new IllegalArgumentException("password is invalid");
+		}
+		if(StringUtils.isBlank(ocraSuite)){
+			logger.warn("ocraSuite is invalid");
+			throw new IllegalArgumentException("ocraSuite is invalid");
+		}
+		if(ArrayUtils.isEmpty(key)){
+			logger.warn("key is invalid");
+			throw new IllegalArgumentException("key is invalid");
+		}
+		if(StringUtils.isBlank(challengeCode)){
+			logger.warn("challengeCode is invalid");
+			throw new IllegalArgumentException("challengeCode is invalid");
+		}
+		if(0 >= bigTimeWindow){
+			logger.warn("bigTimeWindow is invalid");
+			throw new IllegalArgumentException("bigTimeWindow is invalid--bigTimeWindow:" + bigTimeWindow);
+		}
+		logger.debug("key:" + Hex.toHexString(key).toUpperCase());
+		logger.debug("password:" + password + ", ocraSuite:" + ocraSuite + ", challengeCode:" + challengeCode);
+		logger.debug("timeOffset:" + timeOffset + ", bigTimeWindow:" + bigTimeWindow);
+		
+		String otp;
+		for (int i = 0; i < bigTimeWindow; i++) {
+			if(0 == i){
+				otp = generateOCRA(ocraSuite, key, challengeCode, timeOffset);
+				logger.debug("i:" + i + ", otp:" + otp);
+				if(password.equals(otp)){
+					logger.debug("Auth OCRA Success, the result is 0");
+					return i;
+				}
+			}else{
+				otp = generateOCRA(ocraSuite, key, challengeCode, timeOffset + i);
+				logger.debug("i:" + i + ", otp:" + otp);
+				if(password.equals(otp)){
+					logger.debug("Auth OCRA Success, the result is " + i);
+					return i;
+				}
+				otp = generateOCRA(ocraSuite, key, challengeCode, timeOffset - i);
+				logger.debug("i:" + (-i) + ", otp:" + otp);
+				if(password.equals(otp)){
+					logger.debug("Auth OCRA Success, the result is " + (-i));
+					return -i;
+				}
+			}
+		}
+		
+		logger.debug("Auth OCRA Fail");
+		return null;
 	}
 	
 	/**
